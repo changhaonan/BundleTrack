@@ -32,77 +32,49 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef DATA_LOADER_H
-#define DATA_LOADER_H
-
-
 #include "Utils.h"
-#include "Frame.h"
-#include "CUDAImageUtil.h"
+#include <bits/stdc++.h>
+#include <boost/algorithm/string.hpp>
+#include "Bundler.h"
+#include "DataLoader.h"
 
-class Frame;
 
-class DataLoaderBase
+int main(int argc, char **argv)
 {
-public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  std::shared_ptr<YAML::Node> yml;
-  Eigen::Matrix3f _K;
-  Eigen::Matrix4f _ob_in_cam0;
-  PointCloudRGBNormal::Ptr _real_model;
-  pcl::PolygonMeshPtr _mesh;
-  std::vector<std::string> _color_files, _gt_files;
-  int _id;
-  std::string _gt_dir;
-  int _scene_id;
-  std::string _model_name;
-  std::string _model_dir;
+  std::shared_ptr<YAML::Node> yml(new YAML::Node);
+  if (argc<2)
+  {
+    printf("Please provide path to config file\n");
+    exit(1);
+  }
 
-public:
-  DataLoaderBase(std::shared_ptr<YAML::Node> yml1);
-  ~DataLoaderBase();
-  bool hasNext();
-};
+  std::string config_dir = std::string(argv[1]);
+  *yml = YAML::LoadFile(config_dir);
 
-class DataLoaderNOCS : public DataLoaderBase
-{
-public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
+  DataLoaderColmap data_loader(yml);
 
-public:
-  DataLoaderNOCS(std::shared_ptr<YAML::Node> yml1);
-  ~DataLoaderNOCS();
-  std::shared_ptr<Frame> next();
-  std::shared_ptr<Frame> getFrameByIndex(std::string id_str);
-};
-
-class DataLoaderYcbineoat : public DataLoaderBase
-{
-public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  int _start_digit;
-  std::string _id_str_prefix;
-
-public:
-  DataLoaderYcbineoat(std::shared_ptr<YAML::Node> yml1);
-  ~DataLoaderYcbineoat();
-  std::shared_ptr<Frame> next();
-
-};
-
-class DataLoaderColmap : public DataLoaderBase
-{
-public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  int _start_digit;
-  std::string _id_str_prefix;
-
-public:
-  DataLoaderColmap (std::shared_ptr<YAML::Node> yml1);
-  ~DataLoaderColmap ();
-  std::shared_ptr<Frame> next();
-
-};
+  const std::string base_dir = (*yml)["debug_dir"].as<std::string>();
+  std::string cmd = "rm -rf "+base_dir+" && mkdir -p "+base_dir+" && mkdir -p "+base_dir+"/color_viz/";
+  system(cmd.c_str());
 
 
-#endif
+  Eigen::Matrix4f ob_in_cam_last(Eigen::Matrix4f::Identity());
+
+  Bundler bundler(yml,&data_loader);
+
+  while (data_loader.hasNext())
+  {
+    std::shared_ptr<Frame> frame = data_loader.next();
+    if (!frame) break;
+    const std::string index_str = frame->_id_str;
+    const std::string out_dir = (*yml)["debug_dir"].as<std::string>()+"/"+index_str+"/";
+    cv::imwrite(out_dir+index_str+"_color.png",frame->_color);
+
+    Eigen::Matrix4f cur_in_model(data_loader._ob_in_cam0.inverse());
+    bundler.processNewFrame(frame);
+
+    bundler.saveNewframeResult();
+
+  }
+}
