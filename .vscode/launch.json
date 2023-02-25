@@ -11,7 +11,8 @@
             "program": "${workspaceFolder}/r2d2/run_server.py",
             "args": [
                 "--port=5556",
-                "--model=models/r2d2_WASF_N16.pt"
+                "--model=models/r2d2_WASF_N16.pt",
+                "--top-k=500"
             ],
             "console": "integratedTerminal",
             "justMyCode": true,
