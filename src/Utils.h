@@ -181,6 +181,8 @@ bool isPixelInsideImage(const int H, const int W, float u, float v);
 void solveRigidTransformBetweenPoints(const Eigen::MatrixXf &points1, const Eigen::MatrixXf &points2, Eigen::Matrix4f &pose);
 void drawProjectPoints(PointCloudRGBNormal::Ptr cloud, const Eigen::Matrix3f &K, cv::Mat &out);
 
+bool parseIntrinsicTxt(std::string filename, Eigen::Matrix3f &K);
+
 template<int rows, int cols>
 void parseMatrixTxt(std::string filename, Eigen::Matrix<float,rows,cols> &out)
 {

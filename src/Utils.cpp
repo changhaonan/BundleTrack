@@ -230,6 +230,41 @@ void drawProjectPoints(PointCloudRGBNormal::Ptr cloud, const Eigen::Matrix3f &K,
   }
 }
 
+bool parseIntrinsicTxt(std::string filename, Eigen::Matrix3f &K) 
+{
+  std::ifstream file(filename);
+  if (!file.is_open())
+  {
+    printf("Cannot open file: %s\n",filename.c_str());
+    return false;
+  }
+
+  std::string line;
+  std::vector<std::string> words;
+
+  // fx
+  std::getline(file,line);
+  boost::split(words, line, boost::is_any_of(" "));
+  K(0,0) = std::stof(words[1]);
+
+  // fy
+  std::getline(file,line);
+  boost::split(words, line, boost::is_any_of(" "));
+  K(1,1) = std::stof(words[1]);
+
+  // cx
+  std::getline(file,line);
+  boost::split(words, line, boost::is_any_of(" "));
+  K(0,2) = std::stof(words[1]);
+  std::getline(file,line);
+
+  // cy
+  std::getline(file,line);
+  boost::split(words, line, boost::is_any_of(" "));
+  K(1,2) = std::stof(words[1]);
+  std::getline(file,line);
+}
+
 } // namespace Utils
 
 

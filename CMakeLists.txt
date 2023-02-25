@@ -63,3 +63,6 @@ target_link_libraries(bundle_track_nocs ${PROJECT_NAME} )
 
 add_executable(bundle_track_ycbineoat  src/app/bundle_track_ycbineoat.cpp)
 target_link_libraries(bundle_track_ycbineoat ${PROJECT_NAME} )
+
+add_executable(bundle_track_colmap  src/app/bundle_track_colmap.cpp)
+target_link_libraries(bundle_track_colmap ${PROJECT_NAME} )

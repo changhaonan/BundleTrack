@@ -374,33 +374,14 @@ DataLoaderColmap::DataLoaderColmap(std::shared_ptr<YAML::Node> yml1) : DataLoade
   const std::string data_dir = (*yml)["data_dir"].as<std::string>();
   _model_dir = (*yml)["model_dir"].as<std::string>();
 
-  Utils::parseMatrixTxt(data_dir + "/cam_K.txt", _K);
+  // Load intrinsics
+  Utils::parseIntrinsicTxt(data_dir + "/intrinsics.txt", _K);
   std::cout << "cam K=\n"
             << _K << std::endl;
 
-  {
-    _gt_dir = data_dir + "/annotated_poses/";
-    std::vector<std::string> gt_names;
-    Utils::readDirectory(_gt_dir, gt_names);
-    assert(gt_names.size() > 0);
-    Utils::parsePoseTxt(_gt_dir + gt_names[0], _ob_in_cam0);
-    std::cout << "ob_in_cam0\n"
-              << _ob_in_cam0 << "\n\n";
-
-    for (int i = 0; i < gt_names.size(); i++)
-    {
-      _gt_files.push_back(_gt_dir + gt_names[i]);
-    }
-  }
-
-  pcl::io::loadOBJFile(_model_dir, *_real_model);
-  _mesh = boost::make_shared<pcl::PolygonMesh>();
-  pcl::io::loadOBJFile(_model_dir, *_mesh);
-  assert(_real_model->points.size() > 0);
-  Utils::downsamplePointCloud(_real_model, _real_model, 0.015);
-
+  // Load images
   std::vector<std::string> files;
-  Utils::readDirectory(data_dir + "/rgb/", files);
+  Utils::readDirectory(data_dir + "/color/", files);
   printf("data has %d images\n", files.size());
   assert(files.size() > 0);
 
@@ -408,15 +389,16 @@ DataLoaderColmap::DataLoaderColmap(std::shared_ptr<YAML::Node> yml1) : DataLoade
   for (int i = 0; i < files.size(); i++)
   {
     auto f = files[i];
-    _color_files.push_back(data_dir + "/rgb/" + f);
+    _color_files.push_back(data_dir + "/color/" + f);
     std::vector<std::string> strs;
     boost::split(strs, f, boost::is_any_of("."));
     names.push_back(strs.front());
   }
-  _start_digit = 0;
 
-  pcl::PointXYZRGBNormal minPt, maxPt;
-  pcl::getMinMax3D(*_real_model, minPt, maxPt);
+  // Init pose
+  _ob_in_cam0 = Eigen::Matrix4f::Identity();
+  
+  _start_digit = 0;
 }
 
 DataLoaderColmap::~DataLoaderColmap()
