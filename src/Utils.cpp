@@ -256,13 +256,11 @@ bool parseIntrinsicTxt(std::string filename, Eigen::Matrix3f &K)
   std::getline(file,line);
   boost::split(words, line, boost::is_any_of(" "));
   K(0,2) = std::stof(words[1]);
-  std::getline(file,line);
 
   // cy
   std::getline(file,line);
   boost::split(words, line, boost::is_any_of(" "));
   K(1,2) = std::stof(words[1]);
-  std::getline(file,line);
 }
 
 } // namespace Utils

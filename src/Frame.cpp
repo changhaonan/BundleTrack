@@ -248,15 +248,9 @@ void Frame::segmentationByMaskFile()
   }
 
   std::string mask_file;
-  if (data_dir.find("NOCS")!=-1)
-  {
-    const std::string mask_dir = (*yml)["mask_dir"].as<std::string>();
-    mask_file = mask_dir+"/"+_id_str+".png";
-  }
-  else
-  {
-    mask_file = data_dir+"/masks/"+_id_str+".png";
-  }
+  const std::string mask_dir = (*yml)["mask_dir"].as<std::string>();
+  mask_file = mask_dir+"/"+_id_str+".png";
+  
   _fg_mask = cv::imread(mask_file, cv::IMREAD_UNCHANGED);
   if (_fg_mask.rows==0)
   {

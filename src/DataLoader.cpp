@@ -379,6 +379,13 @@ DataLoaderColmap::DataLoaderColmap(std::shared_ptr<YAML::Node> yml1) : DataLoade
   std::cout << "cam K=\n"
             << _K << std::endl;
 
+  // Load model
+  pcl::io::loadOBJFile(_model_dir, *_real_model);
+  _mesh = boost::make_shared<pcl::PolygonMesh>();
+  pcl::io::loadOBJFile(_model_dir, *_mesh);
+  assert(_real_model->points.size() > 0);
+  Utils::downsamplePointCloud(_real_model, _real_model, 0.015);
+
   // Load images
   std::vector<std::string> files;
   Utils::readDirectory(data_dir + "/color/", files);
@@ -397,7 +404,11 @@ DataLoaderColmap::DataLoaderColmap(std::shared_ptr<YAML::Node> yml1) : DataLoade
 
   // Init pose
   _ob_in_cam0 = Eigen::Matrix4f::Identity();
-  
+  _ob_in_cam0 << 1.0, 0.0, 0.0, 0.1,
+      0.0, 1.0, 0.0, 0.1,
+      0.0, 0.0, 1.0, 0.1,
+      0.0, 0.0, 0.0, 1.0;
+
   _start_digit = 0;
 }
 
@@ -422,7 +433,7 @@ std::shared_ptr<Frame> DataLoaderColmap::next()
   }
 
   cv::Mat depth_raw;
-  std::string depth_dir = data_dir + "/depth/" + index_str + ".depth.png";
+  std::string depth_dir = data_dir + "/depth/" + index_str + ".png";
   Utils::readDepthImage(depth_raw, depth_dir);
 
   cv::Mat depth_sim;
@@ -440,7 +451,7 @@ std::shared_ptr<Frame> DataLoaderColmap::next()
   Eigen::Vector4f roi;
   roi << 99999, 0, 99999, 0;
 
-  std::shared_ptr<Frame> frame(new Frame(color, depth, depth_raw, depth_sim, roi, pose, _id, index_str + ".seg", _K, yml, NULL, _real_model));
+  std::shared_ptr<Frame> frame(new Frame(color, depth, depth_raw, depth_sim, roi, pose, _id, index_str, _K, yml, NULL, _real_model));
   _id++;
 
   return frame;
