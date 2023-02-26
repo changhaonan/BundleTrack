@@ -32,8 +32,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-
 #ifndef COMMON_IO__HH
 #define COMMON_IO__HH
 
@@ -144,9 +142,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unsupported/Eigen/NonLinearOptimization>
 #include <boost/filesystem.hpp>
 
-
 #define EIGEN_DENSEBASE_PLUGIN "EigenDenseBaseAddons.h"
-
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
@@ -154,88 +150,86 @@ typedef pcl::PointCloud<pcl::PointXYZRGBNormal> PointCloudRGBNormal;
 typedef pcl::PointCloud<pcl::PointNormal> PointCloudNormal;
 typedef pcl::PointCloud<pcl::PointSurfel> PointCloudSurfel;
 typedef pcl::PointCloud<pcl::PrincipalCurvatures> PointCloudCurvatures;
-typedef std::vector<Eigen::Matrix4f,Eigen::aligned_allocator<Eigen::Matrix4f> > PoseVector;
+typedef std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> PoseVector;
 using uchar = unsigned char;
-
-
 
 namespace Utils
 {
-float rotationGeodesicDistance(const Eigen::Matrix3f &R1, const Eigen::Matrix3f &R2);
-template<class PointT>
-void convert3dOrganizedRGB(cv::Mat &objDepth, cv::Mat &colImage, Eigen::Matrix3f &camIntrinsic, boost::shared_ptr<pcl::PointCloud<PointT>> objCloud);
-void readDepthImage(cv::Mat &depthImg, std::string path);
-void readDirectory(const std::string& name, std::vector<std::string>& v);
+  float rotationGeodesicDistance(const Eigen::Matrix3f &R1, const Eigen::Matrix3f &R2);
+  template <class PointT>
+  void convert3dOrganizedRGB(cv::Mat &objDepth, cv::Mat &colImage, Eigen::Matrix3f &camIntrinsic, boost::shared_ptr<pcl::PointCloud<PointT>> objCloud);
+  void readDepthImage(cv::Mat &depthImg, std::string path);
+  void readDirectory(const std::string &name, std::vector<std::string> &v);
 
+  template <class PointType>
+  void downsamplePointCloud(boost::shared_ptr<pcl::PointCloud<PointType>> cloud_in, boost::shared_ptr<pcl::PointCloud<PointType>> cloud_out, float vox_size);
 
-template<class PointType>
-void downsamplePointCloud(boost::shared_ptr<pcl::PointCloud<PointType> > cloud_in, boost::shared_ptr<pcl::PointCloud<PointType> > cloud_out, float vox_size);
+  void parsePoseTxt(std::string filename, Eigen::Matrix4f &out);
 
-void parsePoseTxt(std::string filename, Eigen::Matrix4f &out);
+  void normalizeRotationMatrix(Eigen::Matrix3f &R);
+  void normalizeRotationMatrix(Eigen::Matrix4f &pose);
+  bool isPixelInsideImage(const int H, const int W, float u, float v);
 
-void normalizeRotationMatrix(Eigen::Matrix3f &R);
-void normalizeRotationMatrix(Eigen::Matrix4f &pose);
-bool isPixelInsideImage(const int H, const int W, float u, float v);
+  void solveRigidTransformBetweenPoints(const Eigen::MatrixXf &points1, const Eigen::MatrixXf &points2, Eigen::Matrix4f &pose);
+  void drawProjectPoints(PointCloudRGBNormal::Ptr cloud, const Eigen::Matrix3f &K, cv::Mat &out);
 
+  bool parseIntrinsicTxt(std::string filename, Eigen::Matrix3f &K);
 
-void solveRigidTransformBetweenPoints(const Eigen::MatrixXf &points1, const Eigen::MatrixXf &points2, Eigen::Matrix4f &pose);
-void drawProjectPoints(PointCloudRGBNormal::Ptr cloud, const Eigen::Matrix3f &K, cv::Mat &out);
+  // Drawing functions
+  std::pair<float, float> getProjectPointCoord3Dto2D(float x, float y, float z, const Eigen::Matrix3f &K, cv::Mat &out);
+  void drawLine(cv::Mat &out, int x1, int y1, int x2, int y2, cv::Scalar color);
+  void drawBBox(float x, float y, float z, const Eigen::Matrix3f &K, cv::Mat &out, const Eigen::Matrix4f &pose);
 
-bool parseIntrinsicTxt(std::string filename, Eigen::Matrix3f &K);
-
-template<int rows, int cols>
-void parseMatrixTxt(std::string filename, Eigen::Matrix<float,rows,cols> &out)
-{
-  using namespace std;
-  std::vector<float> data;
-  string line;
-  ifstream file(filename);
-  if (file.is_open())
+  template <int rows, int cols>
+  void parseMatrixTxt(std::string filename, Eigen::Matrix<float, rows, cols> &out)
   {
-    while (getline(file, line))
+    using namespace std;
+    std::vector<float> data;
+    string line;
+    ifstream file(filename);
+    if (file.is_open())
     {
-      std::stringstream ss(line);
-      while (getline(ss, line, ' '))
+      while (getline(file, line))
       {
-        if (line.size()>0)
-          data.push_back(stof(line));
+        std::stringstream ss(line);
+        while (getline(ss, line, ' '))
+        {
+          if (line.size() > 0)
+            data.push_back(stof(line));
+        }
       }
     }
+    else
+    {
+      std::cout << "opening failed: \n"
+                << filename << std::endl;
+    }
+    for (int i = 0; i < rows * cols; i++)
+    {
+      out(i / cols, i % cols) = data[i];
+    }
   }
-  else
-  {
-    std::cout<<"opening failed: \n"<<filename<<std::endl;
-  }
-  for (int i=0;i<rows*cols;i++)
-  {
-    out(i/cols,i%cols) = data[i];
-  }
-}
 
-template<typename Derived>
-inline bool isMatrixFinite(const Eigen::MatrixBase<Derived>& x)
-{
-	return (x.array().isFinite()).all();
-};
-
+  template <typename Derived>
+  inline bool isMatrixFinite(const Eigen::MatrixBase<Derived> &x)
+  {
+    return (x.array().isFinite()).all();
+  };
 
 }
 
 namespace pcl
 {
- template <typename PointT, typename Scalar>
- inline PointT transformPointWithNormal(const PointT &point, const Eigen::Matrix<Scalar,4,4> &transform)
- {
-   PointT ret = point;
-   pcl::detail::Transformer<Scalar> tf (transform);
-   tf.se3 (point.data, ret.data);
-   tf.so3 (point.data_n, ret.data_n);
-   return (ret);
- }
+  template <typename PointT, typename Scalar>
+  inline PointT transformPointWithNormal(const PointT &point, const Eigen::Matrix<Scalar, 4, 4> &transform)
+  {
+    PointT ret = point;
+    pcl::detail::Transformer<Scalar> tf(transform);
+    tf.se3(point.data, ret.data);
+    tf.so3(point.data_n, ret.data_n);
+    return (ret);
+  }
 
 };
-
-
-
 
 #endif
