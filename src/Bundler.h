@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BUNDLER_HH__
 #define BUNDLER_HH__
 
-
 #include "Utils.h"
 #include "Frame.h"
 #include "FeatureManager.h"
@@ -68,19 +67,18 @@ public:
   int _max_iter;
   bool _need_reinit;
   std::shared_ptr<YAML::Node> yml;
-  DataLoaderBase* _data_loader;
+  DataLoaderBase *_data_loader;
   std::vector<std::shared_ptr<Frame>> _local_frames;
-
 
 public:
   Bundler(std::shared_ptr<YAML::Node> yml1, DataLoaderBase *data_loader);
+  void initPose(const Eigen::Matrix4f& cam2world);
   void processNewFrame(std::shared_ptr<Frame> frame);
   void checkAndAddKeyframe(std::shared_ptr<Frame> frame);
   void optimizeToPrev(std::shared_ptr<Frame> frame);
   void optimizeGPU();
   void selectKeyFramesForBA();
   void saveNewframeResult();
-
 };
 
 #endif

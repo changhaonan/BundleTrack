@@ -80,6 +80,7 @@ void Bundler::processNewFrame(std::shared_ptr<Frame> frame)
   else
   {
     frame->segmentationByMaskFile();
+    frame->initPose();
   }
 
   if (frame->_roi(1) - frame->_roi(0) < 10 || frame->_roi(3) - frame->_roi(2) < 10)
@@ -101,6 +102,7 @@ void Bundler::processNewFrame(std::shared_ptr<Frame> frame)
     float rot_deg = 0;
     Eigen::Matrix4f prev_in_init(Eigen::Matrix4f::Identity());
 
+    // FIXME: we can compute a rot_deg other than 0?
     _fm->detectFeature(frame, rot_deg);
   }
   catch (const std::exception &e)

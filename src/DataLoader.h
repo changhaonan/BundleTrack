@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DATA_LOADER_H
 #define DATA_LOADER_H
 
-
 #include "Utils.h"
 #include "Frame.h"
 #include "CUDAImageUtil.h"
@@ -87,7 +86,6 @@ public:
   DataLoaderYcbineoat(std::shared_ptr<YAML::Node> yml1);
   ~DataLoaderYcbineoat();
   std::shared_ptr<Frame> next();
-
 };
 
 class DataLoaderColmap : public DataLoaderBase
@@ -98,11 +96,9 @@ public:
   std::string _id_str_prefix;
 
 public:
-  DataLoaderColmap (std::shared_ptr<YAML::Node> yml1);
-  ~DataLoaderColmap ();
+  DataLoaderColmap(std::shared_ptr<YAML::Node> yml1);
+  ~DataLoaderColmap();
   std::shared_ptr<Frame> next();
-
 };
-
 
 #endif

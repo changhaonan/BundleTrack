@@ -39,7 +39,6 @@ zmq::socket_t Frame::socket;
 
 Frame::Frame()
 {
-
 }
 
 Frame::Frame(const cv::Mat &color, const cv::Mat &depth, const cv::Mat &depth_raw, const cv::Mat &depth_sim, const Eigen::Vector4f &roi, const Eigen::Matrix4f &pose_in_model, int id, std::string id_str, const Eigen::Matrix3f &K, std::shared_ptr<YAML::Node> yml1, PointCloudRGBNormal::Ptr cloud, PointCloudRGBNormal::Ptr real_model)
@@ -64,19 +63,16 @@ Frame::Frame(const cv::Mat &color, const cv::Mat &depth, const cv::Mat &depth_ra
   _pose_inited = false;
   _roi = roi;
 
-  const int n_pixels = _H*_W;
-  cudaMalloc(&_depth_gpu, n_pixels*sizeof(float));
-  cudaMalloc(&_normal_gpu, n_pixels*sizeof(float4));
-  cudaMalloc(&_color_gpu, n_pixels*sizeof(uchar4));
-
+  const int n_pixels = _H * _W;
+  cudaMalloc(&_depth_gpu, n_pixels * sizeof(float));
+  cudaMalloc(&_normal_gpu, n_pixels * sizeof(float4));
+  cudaMalloc(&_color_gpu, n_pixels * sizeof(uchar4));
 
   cv::cvtColor(_color, _gray, cv::COLOR_BGR2GRAY);
 
   updateDepthGPU();
   processDepth();
-
   updateColorGPU();
-
   depthToCloudAndNormals();
 
   if (!cloud)
@@ -88,7 +84,6 @@ Frame::Frame(const cv::Mat &color, const cv::Mat &depth, const cv::Mat &depth_ra
   }
 }
 
-
 Frame::~Frame()
 {
   cudaFree(_depth_gpu);
@@ -98,63 +93,62 @@ Frame::~Frame()
 
 void Frame::updateDepthCPU()
 {
-  const int n_pixels = _H*_W;
+  const int n_pixels = _H * _W;
   _depth = cv::Mat::zeros(1, n_pixels, CV_32F);
-  cudaMemcpy(_depth.data, _depth_gpu, n_pixels*sizeof(float), cudaMemcpyDeviceToHost);
-  _depth = _depth.reshape(1,_H);
+  cudaMemcpy(_depth.data, _depth_gpu, n_pixels * sizeof(float), cudaMemcpyDeviceToHost);
+  _depth = _depth.reshape(1, _H);
 }
 
 void Frame::updateDepthGPU()
 {
-  const int n_pixels = _H*_W;
-  cv::Mat depth_flat = _depth.reshape(1,1);
-  cudaMemcpy(_depth_gpu, depth_flat.data, n_pixels*sizeof(float), cudaMemcpyHostToDevice);
+  const int n_pixels = _H * _W;
+  cv::Mat depth_flat = _depth.reshape(1, 1);
+  cudaMemcpy(_depth_gpu, depth_flat.data, n_pixels * sizeof(float), cudaMemcpyHostToDevice);
 }
 
 void Frame::updateColorGPU()
 {
-  const int n_pixels = _H*_W;
+  const int n_pixels = _H * _W;
   std::vector<uchar4> color_array(n_pixels);
-  for (int h=0;h<_H;h++)
+  for (int h = 0; h < _H; h++)
   {
-    for (int w=0;w<_W;w++)
+    for (int w = 0; w < _W; w++)
     {
-      const auto &bgr = _color.at<cv::Vec3b>(h,w);
-      color_array[h*_W+w] = make_uchar4(bgr[0],bgr[1],bgr[2],0);
+      const auto &bgr = _color.at<cv::Vec3b>(h, w);
+      color_array[h * _W + w] = make_uchar4(bgr[0], bgr[1], bgr[2], 0);
     }
   }
-  cudaMemcpy(_color_gpu, color_array.data(), sizeof(uchar4)*color_array.size(), cudaMemcpyHostToDevice);
+  cudaMemcpy(_color_gpu, color_array.data(), sizeof(uchar4) * color_array.size(), cudaMemcpyHostToDevice);
 }
 
 void Frame::updateNormalGPU()
 {
-  const int n_pixels = _H*_W;
+  const int n_pixels = _H * _W;
   std::vector<float4> normal_array(n_pixels);
-  for (int h=0;h<_H;h++)
+  for (int h = 0; h < _H; h++)
   {
-    for (int w=0;w<_W;w++)
+    for (int w = 0; w < _W; w++)
     {
-      const auto &pt = (*_cloud)(w,h);
-      if (pt.z>0.1)
+      const auto &pt = (*_cloud)(w, h);
+      if (pt.z > 0.1)
       {
-        normal_array[h*_W+w] = make_float4(pt.normal_x, pt.normal_y, pt.normal_z, 0);
+        normal_array[h * _W + w] = make_float4(pt.normal_x, pt.normal_y, pt.normal_z, 0);
       }
       else
       {
-        normal_array[h*_W+w] = make_float4(0,0,0,0);
+        normal_array[h * _W + w] = make_float4(0, 0, 0, 0);
       }
     }
   }
-  cudaMemcpy(_normal_gpu, normal_array.data(), sizeof(float4)*normal_array.size(), cudaMemcpyHostToDevice);
+  cudaMemcpy(_normal_gpu, normal_array.data(), sizeof(float4) * normal_array.size(), cudaMemcpyHostToDevice);
 }
-
 
 void Frame::processDepth()
 {
-  const int n_pixels = _H*_W;
+  const int n_pixels = _H * _W;
 
   float *depth_tmp_gpu;
-  cudaMalloc(&depth_tmp_gpu, n_pixels*sizeof(float));
+  cudaMalloc(&depth_tmp_gpu, n_pixels * sizeof(float));
 
   const float sigma_D = (*yml)["depth_processing"]["bilateral_filter"]["sigma_D"].as<float>();
   const float sigma_R = (*yml)["depth_processing"]["bilateral_filter"]["sigma_R"].as<float>();
@@ -163,7 +157,7 @@ void Frame::processDepth()
   const float erode_radius = (*yml)["depth_processing"]["erode"]["radius"].as<float>();
   const float erode_diff = (*yml)["depth_processing"]["erode"]["diff"].as<float>();
 
-  CUDAImageUtil::erodeDepthMap(depth_tmp_gpu, _depth_gpu, erode_radius, _W,_H, erode_diff, erode_ratio);
+  CUDAImageUtil::erodeDepthMap(depth_tmp_gpu, _depth_gpu, erode_radius, _W, _H, erode_diff, erode_ratio);
   CUDAImageUtil::gaussFilterDepthMap(_depth_gpu, depth_tmp_gpu, bf_radius, sigma_D, sigma_R, _W, _H);
   CUDAImageUtil::gaussFilterDepthMap(depth_tmp_gpu, _depth_gpu, bf_radius, sigma_D, sigma_R, _W, _H);
 
@@ -176,22 +170,21 @@ void Frame::processDepth()
   updateDepthCPU();
 
   cudaFree(depth_tmp_gpu);
-
 }
 
 void Frame::depthToCloudAndNormals()
 {
-  const int n_pixels = _H*_W;
+  const int n_pixels = _H * _W;
   float4 *xyz_map_gpu;
-  cudaMalloc(&xyz_map_gpu, n_pixels*sizeof(float4));
+  cudaMalloc(&xyz_map_gpu, n_pixels * sizeof(float4));
   float4x4 K_inv_data;
   K_inv_data.setIdentity();
   Eigen::Matrix3f K_inv = _K.inverse();
-  for (int row=0;row<3;row++)
+  for (int row = 0; row < 3; row++)
   {
-    for (int col=0;col<3;col++)
+    for (int col = 0; col < 3; col++)
     {
-      K_inv_data(row,col) = K_inv(row,col);
+      K_inv_data(row, col) = K_inv(row, col);
     }
   }
   CUDAImageUtil::convertDepthFloatToCameraSpaceFloat4(xyz_map_gpu, _depth_gpu, K_inv_data, _W, _H);
@@ -199,48 +192,48 @@ void Frame::depthToCloudAndNormals()
   CUDAImageUtil::computeNormals(_normal_gpu, xyz_map_gpu, _W, _H);
 
   std::vector<float4> xyz_map(n_pixels);
-  cudaMemcpy(xyz_map.data(), xyz_map_gpu, sizeof(float4)*n_pixels, cudaMemcpyDeviceToHost);
+  cudaMemcpy(xyz_map.data(), xyz_map_gpu, sizeof(float4) * n_pixels, cudaMemcpyDeviceToHost);
   std::vector<float4> normals(n_pixels);
-  cudaMemcpy(normals.data(), _normal_gpu, sizeof(float4)*n_pixels, cudaMemcpyDeviceToHost);
+  cudaMemcpy(normals.data(), _normal_gpu, sizeof(float4) * n_pixels, cudaMemcpyDeviceToHost);
 
   _cloud->height = _H;
   _cloud->width = _W;
   _cloud->is_dense = false;
   _cloud->points.resize(_cloud->width * _cloud->height);
-  for (int h=0;h<_H;h++)
+  for (int h = 0; h < _H; h++)
   {
-    for (int w=0;w<_W;w++)
+    for (int w = 0; w < _W; w++)
     {
-      const int id = h*_W + w;
+      const int id = h * _W + w;
       const auto &xyz = xyz_map[id];
-      (*_cloud)(w,h).x = xyz.x;
-      (*_cloud)(w,h).y = xyz.y;
-      (*_cloud)(w,h).z = xyz.z;
+      (*_cloud)(w, h).x = xyz.x;
+      (*_cloud)(w, h).y = xyz.y;
+      (*_cloud)(w, h).z = xyz.z;
 
-      const auto &color = _color.at<cv::Vec3b>(h,w);
-      (*_cloud)(w,h).b = color[0];
-      (*_cloud)(w,h).g = color[1];
-      (*_cloud)(w,h).r = color[2];
+      const auto &color = _color.at<cv::Vec3b>(h, w);
+      (*_cloud)(w, h).b = color[0];
+      (*_cloud)(w, h).g = color[1];
+      (*_cloud)(w, h).r = color[2];
 
       const auto &normal = normals[id];
-      (*_cloud)(w,h).normal_x = normal.x;
-      (*_cloud)(w,h).normal_y = normal.y;
-      (*_cloud)(w,h).normal_z = normal.z;
+      (*_cloud)(w, h).normal_x = normal.x;
+      (*_cloud)(w, h).normal_y = normal.y;
+      (*_cloud)(w, h).normal_z = normal.z;
     }
   }
 
   cudaFree(xyz_map_gpu);
 }
 
-
 void Frame::segmentationByMaskFile()
 {
   const std::string data_dir = (*yml)["data_dir"].as<std::string>();
-  int scene_id =-1;
+  int scene_id = -1;
   {
     std::regex pattern("scene_[0-9]");
     std::smatch what;
-    if (std::regex_search(data_dir, what, pattern)) {
+    if (std::regex_search(data_dir, what, pattern))
+    {
       std::string result = what[0];
       boost::replace_all(result, "scene_", "");
       scene_id = std::stoi(result);
@@ -249,81 +242,124 @@ void Frame::segmentationByMaskFile()
 
   std::string mask_file;
   const std::string mask_dir = (*yml)["mask_dir"].as<std::string>();
-  mask_file = mask_dir+"/"+_id_str+".png";
-  
+  mask_file = mask_dir + "/" + _id_str + ".png";
+
   _fg_mask = cv::imread(mask_file, cv::IMREAD_UNCHANGED);
-  if (_fg_mask.rows==0)
+  if (_fg_mask.rows == 0)
   {
-    printf("mask file open failed: %s\n",mask_file.c_str());
+    printf("mask file open failed: %s\n", mask_file.c_str());
     exit(1);
   }
 
-  if (data_dir.find("NOCS")!=-1)
+  if (data_dir.find("NOCS") != -1)
   {
     cv::Mat label;
-    cv::connectedComponents(_fg_mask,label,8);
-    std::unordered_map<int,int> hist;
-    for (int h=0;h<_H;h++)
+    cv::connectedComponents(_fg_mask, label, 8);
+    std::unordered_map<int, int> hist;
+    for (int h = 0; h < _H; h++)
     {
-      for (int w=0;w<_W;w++)
+      for (int w = 0; w < _W; w++)
       {
-        if (_fg_mask.at<uchar>(h,w)==0) continue;
-        hist[label.at<int>(h,w)]++;
+        if (_fg_mask.at<uchar>(h, w) == 0)
+          continue;
+        hist[label.at<int>(h, w)]++;
       }
     }
     int max_num = 0;
     int max_id = 0;
-    for (const auto &h:hist)
+    for (const auto &h : hist)
     {
-      if (h.second>max_num)
+      if (h.second > max_num)
       {
         max_num = h.second;
         max_id = h.first;
       }
     }
 
-    if (max_num>0)
+    if (max_num > 0)
     {
       std::vector<cv::Point2i> pts;
-      for (int h=0;h<_H;h++)
+      for (int h = 0; h < _H; h++)
       {
-        for (int w=0;w<_W;w++)
+        for (int w = 0; w < _W; w++)
         {
-          if (label.at<int>(h,w)==max_id && _fg_mask.at<uchar>(h,w)>0)
+          if (label.at<int>(h, w) == max_id && _fg_mask.at<uchar>(h, w) > 0)
           {
-            pts.push_back({w,h});
+            pts.push_back({w, h});
           }
         }
       }
-      _fg_mask = cv::Mat::zeros(_H,_W,CV_8UC1);
+      _fg_mask = cv::Mat::zeros(_H, _W, CV_8UC1);
       std::vector<cv::Point2i> hull;
-      cv::convexHull(pts,hull);
-      cv::fillConvexPoly(_fg_mask,hull,1);
+      cv::convexHull(pts, hull);
+      cv::fillConvexPoly(_fg_mask, hull, 1);
     }
     else
     {
-      _fg_mask = cv::Mat::zeros(_H,_W,CV_8UC1);
+      _fg_mask = cv::Mat::zeros(_H, _W, CV_8UC1);
     }
   }
-  cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, {5,5});
-  cv::dilate(_fg_mask,_fg_mask,kernel);
+  cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, {5, 5});
+  cv::dilate(_fg_mask, _fg_mask, kernel);
 
   invalidatePixelsByMask(_fg_mask);
-
 }
 
+void Frame::initPose()
+{
+  // Init from segmentation for model-free cases
+  if ((*yml)["model_free"].as<bool>())
+  {
+    // Compute the average pointcloud for mask
+    Eigen::Vector3f center(0, 0, 0);
+    Eigen::Vector3f normal(0, 0, 0);
+    int n_pts = 0;
+    for (int h = 0; h < _H; h++)
+    {
+      for (int w = 0; w < _W; w++)
+      {
+        if (_fg_mask.at<uchar>(h, w) == 0)
+          continue;
+        const auto &pt = (*_cloud)(w, h);
+        center += Eigen::Vector3f(pt.x, pt.y, pt.z);
+        normal += Eigen::Vector3f(pt.normal_x, pt.normal_y, pt.normal_z);
+        n_pts++;
+      }
+    }
 
-
+    if (n_pts == 0)
+    {
+      printf("No foreground points in frame %s\n", _id_str.c_str());
+      exit(1);
+      return;
+    }
+    // Compute the average pointcloud for mask
+    center /= n_pts;
+    normal.normalize();
+    Eigen::Vector3f up(0, 0, 1);
+    Eigen::Vector3f right = normal.cross(up);
+    right.normalize();
+    up = right.cross(normal);
+    up.normalize();
+    Eigen::Matrix3f R;
+    R.col(0) = right;
+    R.col(1) = up;
+    R.col(2) = normal;
+    _pose_in_model = Eigen::Matrix4f::Identity();
+    _pose_in_model.block<3, 3>(0, 0) = R;
+    _pose_in_model.block<3, 1>(0, 3) = center;
+  }
+}
 
 void Frame::invalidatePixel(const int h, const int w)
 {
-  _color.at<cv::Vec3b>(h,w) = {0,0,0};
-  _depth.at<float>(h,w) = 0;
-  _depth_sim.at<float>(h,w) = 0;
-  _depth_raw.at<float>(h,w) = 0;
-  _gray.at<uchar>(h,w) = 0;
+  _color.at<cv::Vec3b>(h, w) = {0, 0, 0};
+  _depth.at<float>(h, w) = 0;
+  _depth_sim.at<float>(h, w) = 0;
+  _depth_raw.at<float>(h, w) = 0;
+  _gray.at<uchar>(h, w) = 0;
   {
-    auto &pt = (*_cloud)(w,h);
+    auto &pt = (*_cloud)(w, h);
     pt.x = 0;
     pt.y = 0;
     pt.z = 0;
@@ -335,14 +371,14 @@ void Frame::invalidatePixel(const int h, const int w)
 
 void Frame::invalidatePixelsByMask(const cv::Mat &fg_mask)
 {
-  assert(fg_mask.rows==_H && fg_mask.cols==_W);
-  for (int h=0;h<_H;h++)
+  assert(fg_mask.rows == _H && fg_mask.cols == _W);
+  for (int h = 0; h < _H; h++)
   {
-    for (int w=0;w<_W;w++)
+    for (int w = 0; w < _W; w++)
     {
-      if (fg_mask.at<uchar>(h,w)==0)
+      if (fg_mask.at<uchar>(h, w) == 0)
       {
-        invalidatePixel(h,w);
+        invalidatePixel(h, w);
       }
     }
   }
@@ -350,12 +386,12 @@ void Frame::invalidatePixelsByMask(const cv::Mat &fg_mask)
   updateDepthGPU();
   updateNormalGPU();
 
-  _roi<<9999,0,9999,0;
-  for (int h=0;h<_H;h++)
+  _roi << 9999, 0, 9999, 0;
+  for (int h = 0; h < _H; h++)
   {
-    for (int w=0;w<_W;w++)
+    for (int w = 0; w < _W; w++)
     {
-      if (fg_mask.at<uchar>(h,w)>0)
+      if (fg_mask.at<uchar>(h, w) > 0)
       {
         _roi(0) = std::min(_roi(0), float(w));
         _roi(1) = std::max(_roi(1), float(w));
@@ -367,16 +403,16 @@ void Frame::invalidatePixelsByMask(const cv::Mat &fg_mask)
   _fg_mask = fg_mask.clone();
 }
 
-bool Frame::operator == (const Frame &other)
+bool Frame::operator==(const Frame &other)
 {
-  if (std::stoi(_id_str)==std::stoi(other._id_str)) return true;
+  if (std::stoi(_id_str) == std::stoi(other._id_str))
+    return true;
   return false;
 }
 
-
-bool Frame::operator < (const Frame &other)
+bool Frame::operator<(const Frame &other)
 {
-  if (std::stoi(_id_str)<std::stoi(other._id_str)) return true;
+  if (std::stoi(_id_str) < std::stoi(other._id_str))
+    return true;
   return false;
 }
-

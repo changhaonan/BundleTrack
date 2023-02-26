@@ -89,7 +89,8 @@ public:
   void invalidatePixel(const int h, const int w);
   void invalidatePixelsByMask(const cv::Mat &fg_mask);
   void segmentationByGtPose();
-  void Frame::segmentationByMaskFile();
+  void segmentationByMaskFile();
+  void initPose();
   bool operator == (const Frame &other);
   bool operator < (const Frame &other);
 

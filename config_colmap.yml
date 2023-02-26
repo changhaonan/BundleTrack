@@ -4,6 +4,7 @@ model_name: unit_cube
 model_dir: /home/robot-learning/Projects/ws_Haonan/BundleTrack/data/models/unit_cube/unit_cube.obj
 debug_dir: /home/robot-learning/Projects/ws_Haonan/BundleTrack/log
 LOG: 1
+model_free: True
 port: '5556'
 
 depth_processing:

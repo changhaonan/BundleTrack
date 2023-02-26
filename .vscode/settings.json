@@ -142,6 +142,11 @@
     "stop_token": "cpp",
     "syncstream": "cpp",
     "typeindex": "cpp",
-    "__nullptr": "cpp"
+    "__nullptr": "cpp",
+    "timer": "cpp",
+    "ios": "cpp",
+    "boundingbox": "cpp",
+    "boundingsphere": "cpp",
+    "block": "cpp"
   }
 }
