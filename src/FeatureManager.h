@@ -46,19 +46,21 @@ class Bundler;
 class Frame;
 class FramePairComparator;
 
+namespace pfh
+{
+  class DetectorClient;
+}
+
 typedef std::pair<std::shared_ptr<Frame>, std::shared_ptr<Frame>> FramePair;
-typedef std::pair<int,int> IndexPair;
-typedef std::map<FramePair, std::vector<IndexPair>, FramePairComparator, Eigen::aligned_allocator<std::pair<const FramePair, std::vector<IndexPair> > > > MatchMap;
-typedef std::map<FramePair, Eigen::Matrix4f, FramePairComparator, Eigen::aligned_allocator<std::pair<const FramePair, Eigen::Matrix4f > > > PoseMap;
-
-
-
+typedef std::pair<int, int> IndexPair;
+typedef std::map<FramePair, std::vector<IndexPair>, FramePairComparator, Eigen::aligned_allocator<std::pair<const FramePair, std::vector<IndexPair>>>> MatchMap;
+typedef std::map<FramePair, Eigen::Matrix4f, FramePairComparator, Eigen::aligned_allocator<std::pair<const FramePair, Eigen::Matrix4f>>> PoseMap;
 
 class MapPoint
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  std::map<std::shared_ptr<Frame>, std::pair<float,float>> _img_pt;
+  std::map<std::shared_ptr<Frame>, std::pair<float, float>> _img_pt;
 
 public:
   MapPoint();
@@ -66,12 +68,11 @@ public:
   ~MapPoint();
 };
 
-
 class Correspondence
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  float _uA,_vA,_uB,_vB;
+  float _uA, _vA, _uB, _vB;
   pcl::PointXYZRGBNormal _ptA_cam, _ptB_cam;
   bool _isinlier;
   bool _ispropogated;
@@ -79,10 +80,8 @@ public:
 public:
   Correspondence(float uA, float vA, float uB, float vB, pcl::PointXYZRGBNormal ptA_cam, pcl::PointXYZRGBNormal ptB_cam, bool isinlier);
   ~Correspondence();
-  bool operator == (const Correspondence &other) const;
-
+  bool operator==(const Correspondence &other) const;
 };
-
 
 class SiftManager
 {
@@ -95,9 +94,8 @@ public:
 
   std::map<FramePair, std::vector<Correspondence>> _matches;
   std::map<FramePair, std::vector<Correspondence>> _gt_matches;
-  std::map<FramePair, std::vector<std::shared_ptr<MapPoint>> > _covisible_mappoints;
+  std::map<FramePair, std::vector<std::shared_ptr<MapPoint>>> _covisible_mappoints;
   std::vector<std::shared_ptr<MapPoint>> _map_points_global;
-
 
 public:
   SiftManager(std::shared_ptr<YAML::Node> yml1, Bundler *bundler);
@@ -109,31 +107,26 @@ public:
   void findCorres(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
   void findCorresByMapPoints(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
   virtual void findCorresbyNN(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
-  void pruneMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector< std::vector<cv::DMatch> > &knn_matchesAB, std::vector<cv::DMatch> &matches_AB);
+  void pruneMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<std::vector<cv::DMatch>> &knn_matchesAB, std::vector<cv::DMatch> &matches_AB);
   void collectMutualMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<cv::DMatch> &matches_AB, const std::vector<cv::DMatch> &matches_BA);
   void findCorresbyNNMultiPair(std::vector<FramePair> &pairs);
-  Eigen::Matrix4f procrustesByCorrespondence(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB,  const std::vector<Correspondence> &matches);
+  Eigen::Matrix4f procrustesByCorrespondence(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<Correspondence> &matches);
   void vizCorresBetween(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::string &name);
   void runRansacBetween(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
   void runRansacMultiPairGPU(const std::vector<std::pair<std::shared_ptr<Frame>, std::shared_ptr<Frame>>> &pairs);
   void forgetFrame(std::shared_ptr<Frame> frame);
-
 };
-
 
 class Lfnet : public SiftManager
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  zmq::context_t _context;
-  zmq::socket_t _socket;
+  std::shared_ptr<pfh::DetectorClient> _detector;
 
 public:
   Lfnet(std::shared_ptr<YAML::Node> yml1, Bundler *bundler);
   ~Lfnet();
-  void detectFeature(std::shared_ptr<Frame> frame, const float rot_deg=0);
-
+  void detectFeature(std::shared_ptr<Frame> frame, const float rot_deg = 0);
 };
-
 
 #endif

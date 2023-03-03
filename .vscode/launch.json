@@ -5,6 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "detector (sp)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/external/PointFeatureHub2/run.py",
+            "cwd": "${workspaceFolder}/external/PointFeatureHub2/",
+            "args": [
+                "task=detect",
+                "detect=super_point",
+                "draw_keypoints=true"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "check sequence (ev)",
             "type": "python",
             "request": "launch",
