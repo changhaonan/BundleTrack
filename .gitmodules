@@ -4,3 +4,6 @@
 [submodule "external/Easy3DViewer"]
 	path = external/Easy3DViewer
 	url = git@github.com:changhaonan/Easy3DViewer.git
+[submodule "external/PointFeatureHub2"]
+	path = external/PointFeatureHub2
+	url = git@github.com:changhaonan/PointFeatureHub2.git
