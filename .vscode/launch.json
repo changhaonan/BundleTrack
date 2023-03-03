@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "check sequence (ev)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/external/Easy3DViewer/example/python/check_sequence_poses.py",
+            "args": [
+                "--traj_path=${workspaceFolder}/log/poses"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "r2d2 (server)",
             "type": "python",
             "request": "launch",
