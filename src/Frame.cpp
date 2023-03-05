@@ -233,9 +233,10 @@ void Frame::depthToCloudAndNormals()
 }
 
 
-void Frame::segmentationByMaskFile()
+void Frame::segmentationByMaskFile(std::vector<float> mask_flat)
 {
   const std::string data_dir = (*yml)["data_dir"].as<std::string>();
+  const bool rts = (*yml)["rts"].as<bool>();
   int scene_id =-1;
   {
     std::regex pattern("scene_[0-9]");
@@ -257,7 +258,20 @@ void Frame::segmentationByMaskFile()
   {
     mask_file = data_dir+"/masks/"+_id_str+".png";
   }
-  _fg_mask = cv::imread(mask_file, cv::IMREAD_UNCHANGED);
+  if(rts)
+  {
+    _fg_mask = cv::Mat::zeros(cv::Size(_H,_W),CV_8UC1);
+    for (int h=0;h<_H;h++)
+    {
+      for (int w=0;w<_W;w++)
+      {
+        _fg_mask.at<uchar>(h,w) = (uchar) mask_flat[(h*_W) + w];
+      }
+    }
+  }
+  else
+    _fg_mask = cv::imread(mask_file, cv::IMREAD_UNCHANGED);
+  
   if (_fg_mask.rows==0)
   {
     printf("mask file open failed: %s\n",mask_file.c_str());

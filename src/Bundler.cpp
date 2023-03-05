@@ -50,6 +50,21 @@ Bundler::Bundler(std::shared_ptr<YAML::Node> yml1, DataLoaderBase *data_loader)
   _max_iter = (*yml1)["bundle"]["num_iter_outter"].as<int>();
 
   _fm = std::make_shared<Lfnet>(yml, this);
+
+
+  std::string dataset_dir = (*yml)["data_dir"].as<std::string>();
+  std::vector<std::string> strs;
+  boost::split(strs, dataset_dir, boost::is_any_of("/"));
+  std::string current_dataset_name = strs.back();
+  _socket.connect("tcp://0.0.0.0:6000");
+  zmq::message_t tracker_name(3);
+  zmq::message_t dataset_name(current_dataset_name.length());
+  std::memcpy(tracker_name.data(), "rts", 3);
+  std::memcpy(dataset_name.data(), current_dataset_name.c_str(), current_dataset_name.length());
+  _socket.send(tracker_name,ZMQ_SNDMORE);
+  _socket.send(dataset_name);
+  zmq::message_t init_ack;
+  _socket.recv(init_ack);
 }
 
 
@@ -58,6 +73,21 @@ void Bundler::processNewFrame(std::shared_ptr<Frame> frame)
   std::cout<<"\n\n";
   printf("New frame %s\n",frame->_id_str.c_str());
   _newframe = frame;
+
+  std::string frame_id_str = std::to_string(frame->_id);
+
+  zmq::message_t frame_id_msg(frame_id_str.length());
+  std::memcpy(frame_id_msg.data(),frame_id_str.c_str(),frame_id_str.length());
+  std::cout<<"Trying to send for frame ID: "<< frame->_id <<"\n";
+  _socket.send(frame_id_msg);
+  std::cout<<"Sent for frame ID: "<< frame->_id <<"\n";
+
+  std::cout<<"Trying to block for frame ID: "<< frame->_id <<"\n";
+  zmq::message_t mask_msg;
+  _socket.recv(mask_msg);
+  std::cout<<"Anticipated flat mask size: "<< (frame->_H)*(frame->_W) <<"\n";
+  std::vector<float> mask_flat((frame->_H)*(frame->_W));
+  std::memcpy(mask_flat.data(),mask_msg.data(),mask_flat.size()*sizeof(float));
 
   std::thread worker;
 
@@ -77,11 +107,11 @@ void Bundler::processNewFrame(std::shared_ptr<Frame> frame)
     assert(last_frame->_status!=Frame::FAIL);
     frame->_id = last_frame->_id+1;
     frame->_pose_in_model = last_frame->_pose_in_model;
-    frame->segmentationByMaskFile();
+    frame->segmentationByMaskFile(mask_flat);
   }
   else
   {
-    frame->segmentationByMaskFile();
+    frame->segmentationByMaskFile(mask_flat);
   }
 
 

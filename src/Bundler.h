@@ -35,7 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BUNDLER_HH__
 #define BUNDLER_HH__
 
-
+#include <zmq.hpp>
+#include <zmq_addon.hpp>
 #include "Utils.h"
 #include "Frame.h"
 #include "FeatureManager.h"
@@ -70,6 +71,8 @@ public:
   std::shared_ptr<YAML::Node> yml;
   DataLoaderBase* _data_loader;
   std::vector<std::shared_ptr<Frame>> _local_frames;
+  zmq::context_t _context;
+  zmq::socket_t _socket;
 
 
 public:

@@ -36,6 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define FRAME_HH_
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <zmq.hpp>
+#include <zmq_addon.hpp>
 #include "Utils.h"
 #include "FeatureManager.h"
 #include <opencv2/core/cuda.hpp>
@@ -89,7 +91,7 @@ public:
   void invalidatePixel(const int h, const int w);
   void invalidatePixelsByMask(const cv::Mat &fg_mask);
   void segmentationByGtPose();
-  void Frame::segmentationByMaskFile();
+  void Frame::segmentationByMaskFile(std::vector<float> mask_flat);
   bool operator == (const Frame &other);
   bool operator < (const Frame &other);
 
