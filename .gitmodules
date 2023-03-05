@@ -1,6 +1,3 @@
-[submodule "r2d2"]
-	path = r2d2
-	url = git@github.com:changhaonan/r2d2.git
 [submodule "external/Easy3DViewer"]
 	path = external/Easy3DViewer
 	url = git@github.com:changhaonan/Easy3DViewer.git
