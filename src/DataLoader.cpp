@@ -279,6 +279,7 @@ DataLoaderYcbineoat::DataLoaderYcbineoat(std::shared_ptr<YAML::Node> yml1) : Dat
   const std::string data_dir = (*yml)["data_dir"].as<std::string>();
   _model_dir = (*yml)["model_dir"].as<std::string>();
 
+  _K = Eigen::Matrix3f::Identity();
   Utils::parseMatrixTxt(data_dir + "/cam_K.txt", _K);
   std::cout << "cam K=\n"
             << _K << std::endl;
@@ -375,6 +376,7 @@ DataLoaderColmap::DataLoaderColmap(std::shared_ptr<YAML::Node> yml1) : DataLoade
   _model_dir = (*yml)["model_dir"].as<std::string>();
 
   // Load intrinsics
+  _K = Eigen::Matrix3f::Identity();
   Utils::parseIntrinsicTxt(data_dir + "/intrinsics.txt", _K);
   std::cout << "cam K=\n"
             << _K << std::endl;
