@@ -13,7 +13,7 @@
             "args": [
                 "task=detect",
                 "detect=super_point",
-                "draw_keypoints=true"
+                "draw_keypoints=false"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

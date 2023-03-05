@@ -160,6 +160,7 @@ namespace Utils
   void convert3dOrganizedRGB(cv::Mat &objDepth, cv::Mat &colImage, Eigen::Matrix3f &camIntrinsic, boost::shared_ptr<pcl::PointCloud<PointT>> objCloud);
   void readDepthImage(cv::Mat &depthImg, std::string path);
   void readDirectory(const std::string &name, std::vector<std::string> &v);
+  void readImagesInOrder(const std::string &img_path, std::vector<std::string> &v, const std::string& prefix, const std::string& suffix, int n_leading_zeros);
 
   template <class PointType>
   void downsamplePointCloud(boost::shared_ptr<pcl::PointCloud<PointType>> cloud_in, boost::shared_ptr<pcl::PointCloud<PointType>> cloud_out, float vox_size);

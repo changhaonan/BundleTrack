@@ -126,7 +126,15 @@ namespace Utils
       v.push_back(dp->d_name);
     }
     closedir(dirp);
-    std::sort(v.begin(), v.end());
+    // Sort the files in number order
+    std::sort(v.begin(), v.end(), [](const std::string &a, const std::string &b)
+              { return std::stoi(a) < std::stoi(b); });
+  }
+
+  void readImagesInOrder(const std::string &name, std::vector<std::string> &v, const std::string &prefix, const std::string &suffix, int n_leading_zeros)
+  {
+    v.clear();
+    // read all files in directory using std::filesystem
   }
 
   template <class PointT>

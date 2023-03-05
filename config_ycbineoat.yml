@@ -33,7 +33,7 @@ bundle:
 
 keyframe:
   min_interval: 1
-  min_feat_num: 0
+  min_feat_num: 10
   min_rot: 10
 
 
