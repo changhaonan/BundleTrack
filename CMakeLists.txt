@@ -16,7 +16,7 @@ endif (${CMAKE_BUILD_TYPE} STREQUAL "Release")
 # add_definitions(-DPRINT_RESIDUALS_DENSE=1)
 # add_definitions(-DPRINT_RESIDUALS_SPARSE=1)
 
-add_definitions(-DNO_OPENCV_CUDA=1)
+add_definitions(-DNO_OPENCV_CUDA=0)
 
 find_package(Boost REQUIRED COMPONENTS system program_options)
 find_package(PCL 1.9 REQUIRED)
