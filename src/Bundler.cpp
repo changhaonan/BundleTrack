@@ -129,9 +129,8 @@ void Bundler::processNewFrame(std::shared_ptr<Frame> frame)
     PointCloudRGBNormal::Ptr tmp(new PointCloudRGBNormal);
     Eigen::Matrix4f model_in_cam = frame->_pose_in_model.inverse();
 
+    // FIXME: what is offset??
     Eigen::Matrix4f offset = _fm->procrustesByCorrespondence(frame, last_frame, _fm->_matches[{frame, last_frame}]);
-    std::cout << "Offset: " << std::endl;
-    std::cout << offset << std::endl;
     frame->_pose_in_model = offset * frame->_pose_in_model;
     frame->_pose_inited = true;
   }
@@ -330,9 +329,6 @@ void Bundler::optimizeGPU()
     colors_gpu.push_back(f->_color_gpu);
     normals_gpu.push_back(f->_normal_gpu);
     poses.push_back(f->_pose_in_model);
-    // Check
-    std::cout << "Before BA: frame " << f->_id_str << " pose:" << std::endl;
-    std::cout << f->_pose_in_model.inverse() << std::endl;
   }
 
   if (n_edges_newframe <= min_fm_edges_newframe)
@@ -349,9 +345,6 @@ void Bundler::optimizeGPU()
   {
     const auto &f = _local_frames[i];
     f->_pose_in_model = poses[i];
-    // Check
-    std::cout << "After BA: frame " << f->_id_str << " pose:" << std::endl;
-    std::cout << f->_pose_in_model.inverse() << std::endl;
   }
 }
 
@@ -372,10 +365,6 @@ void Bundler::saveNewframeResult()
   std::ofstream ff(pose_out_dir + _newframe->_id_str + ".txt");
   ff << std::setprecision(10) << ob_in_cam << std::endl;
   ff.close();
-
-  // Debug
-  std::cout << "New frame pose:" << std::endl;
-  std::cout << ob_in_cam << std::endl;
 
   if ((*yml)["LOG"].as<int>() > 0)
   {
