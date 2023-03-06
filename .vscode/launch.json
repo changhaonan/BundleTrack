@@ -5,6 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "detector (sift)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/external/PointFeatureHub2/run.py",
+            "cwd": "${workspaceFolder}/external/PointFeatureHub2/",
+            "args": [
+                "task=detect",
+                "detect=sift",
+                "draw_keypoints=false"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "detector (sp)",
             "type": "python",
             "request": "launch",
@@ -13,10 +27,11 @@
             "args": [
                 "task=detect",
                 "detect=super_point",
-                "draw_keypoints=false"
+                "draw_keypoints=false",
+                "save_image=true"
             ],
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "detector (r2d2)",

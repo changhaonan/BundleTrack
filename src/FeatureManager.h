@@ -106,7 +106,8 @@ public:
   void updateFramePairMapPoints(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
   void findCorres(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
   void findCorresByMapPoints(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
-  virtual void findCorresbyNN(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
+  void findCorresbyNN(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
+  void findCorresbyNNBF(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB);
   void pruneMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<std::vector<cv::DMatch>> &knn_matchesAB, std::vector<cv::DMatch> &matches_AB);
   void collectMutualMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<cv::DMatch> &matches_AB, const std::vector<cv::DMatch> &matches_BA);
   void findCorresbyNNMultiPair(std::vector<FramePair> &pairs);

@@ -272,6 +272,41 @@ void SiftManager::findCorresbyNN(std::shared_ptr<Frame> frameA, std::shared_ptr<
   }
 }
 
+void SiftManager::findCorresbyNNBF(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB)
+{
+  // Debug method: find corres by brute force
+  assert(frameA->_id > frameB->_id);
+  if (frameA->_keypts.size() == 0 || frameB->_keypts.size() == 0)
+    return;
+
+  const float max_dist_no_neighbor = (*yml)["feature_corres"]["max_dist_no_neighbor"].as<float>();
+  const float cos_max_normal_no_neighbor = std::cos((*yml)["feature_corres"]["max_normal_no_neighbor"].as<float>() / 180.0 * M_PI);
+  const float max_dist_neighbor = (*yml)["feature_corres"]["max_dist_neighbor"].as<float>();
+  const float cos_max_normal_neighbor = std::cos((*yml)["feature_corres"]["max_normal_neighbor"].as<float>() / 180.0 * M_PI);
+
+  const int H = frameA->_H;
+  const int W = frameA->_W;
+
+  bool is_neighbor = std::abs(frameA->_id - frameB->_id) == 1;
+
+  std::vector<cv::DMatch> matches_AB, matches_BA;
+  std::vector<std::vector<cv::DMatch>> knn_matchesAB, knn_matchesBA;
+  const int k_near = 5;
+
+  cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::BRUTEFORCE);
+  
+  matcher->match(frameA->_feat_des, frameB->_feat_des, matches_AB);
+  matcher->match(frameB->_feat_des, frameA->_feat_des, matches_BA);
+
+  collectMutualMatches(frameA, frameB, matches_AB, matches_BA);
+
+  if (_matches[{frameA, frameB}].size() < 5 && is_neighbor)
+  {
+    frameA->_status = Frame::FAIL;
+    printf("frame %s and %s findNN too few match, %s status marked as FAIL", frameA->_id_str.c_str(), frameB->_id_str.c_str(), frameA->_id_str.c_str());
+  }
+}
+
 void SiftManager::pruneMatches(std::shared_ptr<Frame> frameA, std::shared_ptr<Frame> frameB, const std::vector<std::vector<cv::DMatch>> &knn_matchesAB, std::vector<cv::DMatch> &matches_AB)
 {
   const float max_dist_no_neighbor = (*yml)["feature_corres"]["max_dist_no_neighbor"].as<float>();
@@ -775,7 +810,7 @@ void SiftManager::vizCorresBetween(std::shared_ptr<Frame> frameA, std::shared_pt
 Lfnet::Lfnet(std::shared_ptr<YAML::Node> yml1, Bundler *bundler) : SiftManager(yml1, bundler)
 {
   int port = (*yml)["port"].as<int>();
-  _detector = std::make_shared<pfh::DetectorClient>(port, 400, 400);
+  _detector = std::make_shared<pfh::DetectorClient>(port, 400);
   _detector->SetUp();
 }
 
