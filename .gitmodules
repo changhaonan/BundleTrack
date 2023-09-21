@@ -4,3 +4,6 @@
 [submodule "external/PointFeatureHub2"]
 	path = external/PointFeatureHub2
 	url = git@github.com:changhaonan/PointFeatureHub2.git
+[submodule "external/pytracking"]
+	path = external/pytracking
+	url = https://github.com/visionml/pytracking.git
