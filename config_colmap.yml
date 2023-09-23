@@ -1,5 +1,5 @@
-data_dir: /home/robot-learning/Projects/ws_Haonan/BundleTrack/data/test_data
-mask_dir: /home/robot-learning/Projects/ws_Haonan/BundleTrack/data/test_data/seg
+data_dir: /home/robot-learning/Projects/VIL2/test_data/exp_0/
+mask_dir: /home/robot-learning/Projects/VIL2/test_data/exp_0/seg
 model_name: unit_cube
 model_dir: /home/robot-learning/Projects/ws_Haonan/BundleTrack/data/models/unit_cube/unit_cube.obj
 debug_dir: /home/robot-learning/Projects/ws_Haonan/BundleTrack/log

@@ -33,6 +33,12 @@ Replace \${data_folder} with your `data_folder` path, and replace \${data_name} 
 
 Then you need to run pytracking to retrieve mask.
 
+## Run 2D tracker
+
+```
+python run_video.py rts rts50 ${DATA_PATH}/%d.png --save_results
+```
+
 ## Debug
 
 We are using Easy3DViewer to visualize the resulting trajectory of objects. To run Easy3DViewer, run the following commands:

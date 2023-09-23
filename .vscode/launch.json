@@ -53,7 +53,7 @@
             "program": "${workspaceFolder}/external/Easy3DViewer/example/python/check_sequence_poses.py",
             "args": [
                 "--traj_path=${workspaceFolder}/log/poses",
-                "--data_path=${workspaceFolder}/data/test_data",
+                "--data_path=/home/robot-learning/Projects/VIL2/test_data/exp_0/",
             ],
             "console": "integratedTerminal",
             "justMyCode": true

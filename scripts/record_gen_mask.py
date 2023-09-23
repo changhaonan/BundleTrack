@@ -6,7 +6,7 @@ import cv2
 # First run pytracking to generate the mask
 # Then run this script to transfer pytracking mask to colmap format
 pytrack_result_dir = "/home/robot-learning/Projects/ws_Haonan/BundleTrack/external/pytracking/pytracking/tracking_results/rts"
-colmap_result_dir = "/home/robot-learning/Projects/ws_Haonan/BundleTrack/data/test_data"
+colmap_result_dir = "/home/robot-learning/Projects/VIL2/test_data/exp_0/"
 colmap_seg_dir = os.path.join(colmap_result_dir, "seg")
 os.makedirs(colmap_seg_dir, exist_ok=True)
 image_list = natsorted(os.listdir(pytrack_result_dir))
