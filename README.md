@@ -21,7 +21,7 @@ data_folder/
     - i.png
 ```
 
-## Record new data
+### Record new data
 
 To run a new trajectory of data, you need to start with recording raw images.
 
@@ -33,10 +33,31 @@ Replace \${data_folder} with your `data_folder` path, and replace \${data_name} 
 
 Then you need to run pytracking to retrieve mask.
 
-## Run 2D tracker
+### Run 2D tracker
+
+First run 2D tracking using pytracking.
 
 ```
 python run_video.py rts rts50 ${DATA_PATH}/%d.png --save_results
+```
+
+Then copy the results to data folder
+```
+python scripts/record_gen_mask.py  --pytrack_result_dir=${PYTRACK_RESULT_DIR} --colmap_result_dir=${COLMAP_RESULT_DIR}
+```
+
+### Run BundleTrack
+
+Change the dir in `config_colmap.yml`. First launch the keypoint detector server.
+
+```
+python external/PointFeatureHub2/run.py --task=detect  --detect=super_point  --draw_keypoints=false
+```
+
+Then launch BundleTrack.
+
+```
+python build/bundle_track_colmap config_colmap.yml
 ```
 
 ## Debug
