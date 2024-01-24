@@ -19,7 +19,7 @@ endif (${CMAKE_BUILD_TYPE} STREQUAL "Release")
 add_definitions(-DNO_OPENCV_CUDA=0)
 
 find_package(Boost REQUIRED COMPONENTS system program_options)
-find_package(PCL 1.9 REQUIRED)
+find_package(PCL 1.10 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(yaml-cpp REQUIRED)
